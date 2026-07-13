@@ -18,24 +18,12 @@ export default defineConfig(() => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-                return 'vendor-react';
-              }
-              if (id.includes('motion') || id.includes('framer-motion')) {
-                return 'vendor-motion';
-              }
-              if (id.includes('lucide-react')) {
-                return 'vendor-icons';
-              }
-              if (id.includes('lottiefiles') || id.includes('dotlottie')) {
-                return 'vendor-lottie';
-              }
-              return 'vendor-libs';
+              return 'vendor';
             }
           },
         },
       },
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 1500,
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
