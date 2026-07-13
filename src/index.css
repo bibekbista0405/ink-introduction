@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Quicksand", "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+  
+  --color-primary: #FF8BA7;
+  --color-secondary: #FFC6C7;
+  --color-accent: #C3AED6;
+  --color-dark: #33272A;
+  --color-light: #FAEEE7;
+  --color-success: #A3E4D7;
+  --color-warning: #F9E79F;
+  --color-danger: #F5B7B1;
+
+  --color-background: #FFF5F8;
+  --color-foreground: #594A4E;
+
+  --animate-blob: blob 7s infinite;
+
+  /* Premium Fluid Typography Configuration with clamp() */
+  --text-xs: clamp(0.65rem, 0.6rem + 0.25vw, 0.75rem);
+  --text-sm: clamp(0.75rem, 0.7rem + 0.3vw, 0.875rem);
+  --text-base: clamp(0.85rem, 0.8rem + 0.4vw, 1rem);
+  --text-lg: clamp(0.95rem, 0.9rem + 0.5vw, 1.125rem);
+  --text-xl: clamp(1.05rem, 0.95rem + 0.7vw, 1.25rem);
+  --text-2xl: clamp(1.2rem, 1.05rem + 1vw, 1.5rem);
+  --text-3xl: clamp(1.35rem, 1.15rem + 1.5vw, 1.875rem);
+  --text-4xl: clamp(1.6rem, 1.3rem + 2.2vw, 2.25rem);
+  --text-5xl: clamp(1.85rem, 1.45rem + 3vw, 3rem);
+  --text-6xl: clamp(2.1rem, 1.6rem + 4vw, 3.75rem);
+  --text-7xl: clamp(2.4rem, 1.8rem + 5vw, 4.5rem);
+  --text-8xl: clamp(2.8rem, 2rem + 6.5vw, 6rem);
+}
+
+@layer utilities {
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .will-change-transform-opacity {
+    will-change: transform, opacity;
+  }
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30 selection:text-dark;
+    overflow-x: hidden;
+  }
+
+  section {
+    transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+  }
+
+  section[data-scroll-active="false"] {
+    opacity: 0.55;
+    transform: scale(0.99) translateY(4px);
+  }
+
+  section[data-scroll-active="true"] {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (pointer: coarse) {
+  /* Safely restore native pointer/default system cursors on touch inputs to ensure native responsive interactions */
+  *, html, body, button, a, input, select, textarea, [class*="cursor-none"], [class*="cursor-pointer"] {
+    cursor: auto !important;
+  }
+}
+
