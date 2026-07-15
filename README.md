@@ -118,8 +118,6 @@ Compile the frontend into optimized static distribution files (`/dist` folder):
 npm run build
 ```
 
----
-
 ## 🔍 SEO & Crawl Optimization
 
 INK is fully audited and optimized for search ranking:
