@@ -1,249 +1,226 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Sparkles, PenTool } from 'lucide-react';
+import { ArrowLeft, Sparkles, MessageCircleQuestion, Mail, Compass } from 'lucide-react';
 import { Magnetic } from './ui/Magnetic';
 import { fireConfetti } from '../lib/confetti';
-import { CustomImage } from './ui/CustomImage';
-import ink404Illustration from '../assets/images/ink_404_illustration_1783715924172.jpg';
 
-interface InkDrop {
+// A handful of fixed waypoints describing a lazy, looping arc across the
+// scene. The plane travels through these in order, then loops back to the
+// start — simple keyframe animation (transform-only, no filter, no scroll
+// binding), so it's cheap to run continuously and stays butter-smooth.
+const FLIGHT_PATH = [
+  { x: -140, y: 40, rotate: -8 },
+  { x: -40, y: -70, rotate: -22 },
+  { x: 70, y: -30, rotate: 6 },
+  { x: 150, y: 60, rotate: 18 },
+  { x: 40, y: 90, rotate: -4 },
+  { x: -140, y: 40, rotate: -8 },
+];
+
+interface Wisp {
   id: number;
-  x: number;
-  y: number;
+  angle: number;
+  distance: number;
   size: number;
   color: string;
 }
 
 export function NotFound() {
-  const [inkSpills, setInkSpills] = useState<InkDrop[]>([]);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isBlinking, setIsBlinking] = useState(false);
+  const location = useLocation();
+  const [wisps, setWisps] = useState<Wisp[]>([]);
+  const [sendCount, setSendCount] = useState(0);
 
-  // Trigger eyes blinking occasionally
-  React.useEffect(() => {
-    const blinkInterval = setInterval(() => {
-      setIsBlinking(true);
-      setTimeout(() => setIsBlinking(false), 200);
-    }, 4000);
-    return () => clearInterval(blinkInterval);
-  }, []);
-
-  const handleSpillInk = (e: React.MouseEvent<HTMLButtonElement>) => {
+  // A small, tasteful burst of drifting dots/sparkles from the button — a
+  // "sending another message off" moment. Bounded count, transform +
+  // opacity only, so it stays cheap no matter how many times it's tapped.
+  const handleSendAnother = () => {
     fireConfetti();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const startX = rect.left + rect.width / 2;
-    const startY = rect.top;
-
-    const newDrops: InkDrop[] = Array.from({ length: 6 }).map((_, i) => ({
+    setSendCount((c) => c + 1);
+    const newWisps: Wisp[] = Array.from({ length: 10 }).map((_, i) => ({
       id: Date.now() + i,
-      x: startX + (Math.random() - 0.5) * 160,
-      y: startY + (Math.random() - 0.5) * 40,
-      size: Math.random() * 24 + 12,
-      color: i % 3 === 0 ? '#FF8BA7' : i % 3 === 1 ? '#C3AED6' : '#33272A'
+      angle: (i / 10) * Math.PI * 2 + Math.random() * 0.4,
+      distance: 90 + Math.random() * 70,
+      size: Math.random() * 6 + 4,
+      color: i % 3 === 0 ? '#FF4D8D' : i % 3 === 1 ? '#A855F7' : '#FF7A59',
     }));
-
-    setInkSpills((prev) => [...prev, ...newDrops].slice(-30)); // Limit to 30 drops max
+    setWisps((prev) => [...prev, ...newWisps].slice(-40));
   };
 
   return (
-    <div className="relative min-h-[80vh] flex flex-col items-center justify-center px-6 py-12 text-center overflow-visible select-none">
-      
-      {/* Falling Ink Droplets Layer */}
+    <div className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 py-16 text-center overflow-hidden select-none">
+
+      {/* Soft ambient backdrop — two static-blur glows, no animated filter */}
+      <div className="absolute top-1/4 -left-24 w-72 h-72 rounded-full bg-secondary/25 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-24 w-80 h-80 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
+
+      {/* Dashed flight-path arc, purely decorative */}
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none opacity-40"
+        viewBox="0 0 800 500"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path
+          d="M 80 340 C 220 120, 420 480, 600 160 S 760 340, 720 200"
+          fill="none"
+          stroke="currentColor"
+          className="text-primary/40"
+          strokeWidth="2"
+          strokeDasharray="1 14"
+          strokeLinecap="round"
+        />
+      </svg>
+
+      {/* The lost paper airplane, looping its little flight forever */}
+      <motion.div
+        className="absolute top-1/2 left-1/2 z-0 pointer-events-none"
+        animate={{
+          x: FLIGHT_PATH.map(p => p.x),
+          y: FLIGHT_PATH.map(p => p.y),
+          rotate: FLIGHT_PATH.map(p => p.rotate),
+        }}
+        transition={{
+          duration: 14,
+          repeat: Infinity,
+          ease: "easeInOut",
+          times: [0, 0.2, 0.45, 0.7, 0.88, 1],
+        }}
+      >
+        <svg viewBox="0 0 24 24" fill="none" className="w-9 h-9 text-primary drop-shadow-md">
+          <path
+            d="M1.91 11.08c-.38.16-.39.69-.02.87l6.81 3.23c.31.15.68.08.92-.17l9.46-9.46c.15-.15.37.07.22.22l-9.46 9.46c-.25.25-.32.61-.17.92l3.23 6.81c.18.38.71.37.87-.02L21.72 3.1c.12-.29-.19-.6-.48-.48L1.91 11.08z"
+            fill="currentColor"
+          />
+        </svg>
+      </motion.div>
+
+      {/* Sent-message wisps burst */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
         <AnimatePresence>
-          {inkSpills.map((drop) => (
+          {wisps.map((w) => (
             <motion.div
-              key={drop.id}
-              className="absolute rounded-full"
+              key={w.id}
+              className="absolute left-1/2 top-[62%] rounded-full"
               style={{
-                left: drop.x,
-                top: drop.y,
-                width: drop.size,
-                height: drop.size,
-                backgroundColor: drop.color,
-                borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                width: w.size,
+                height: w.size,
+                backgroundColor: w.color,
               }}
-              initial={{ opacity: 0, scale: 0.2, y: 0 }}
+              initial={{ opacity: 0.9, scale: 0.3, x: 0, y: 0 }}
               animate={{
-                opacity: [0.8, 1, 0],
-                scale: [1, 1.2, 0.4],
-                y: window.innerHeight * 0.8,
-                rotate: [0, 45, 180]
+                opacity: [0.9, 0.9, 0],
+                scale: [0.6, 1, 0.4],
+                x: Math.cos(w.angle) * w.distance,
+                y: Math.sin(w.angle) * w.distance - 40,
               }}
               exit={{ opacity: 0 }}
-              transition={{
-                duration: 2.2,
-                ease: [0.25, 1, 0.5, 1],
-              }}
+              transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
             />
           ))}
         </AnimatePresence>
       </div>
 
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center text-left relative z-20">
-        
-        {/* Typographic & Message Column */}
-        <div className="flex flex-col justify-center order-2 md:order-1 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-black text-primary uppercase tracking-wider mb-6 w-fit mx-auto md:mx-0">
-            <PenTool className="w-3.5 h-3.5" />
-            <span>Post Astray</span>
-          </div>
-          
-          {/* Animated Big 404 Title */}
-          <h1 className="text-7xl md:text-8xl font-black text-dark tracking-tighter mb-4 flex justify-center md:justify-start items-baseline">
-            <motion.span
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              4
-            </motion.span>
-            <motion.span
-              className="inline-block mx-1 relative"
-              animate={{ rotate: [0, 8, -8, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <span className="text-primary">0</span>
-              {/* Dripping dot under the zero */}
-              <motion.span
-                className="absolute left-1/2 -translate-x-1/2 bottom-0 w-3 h-3 rounded-full bg-primary"
-                animate={{
-                  y: [0, 15, 30, 0],
-                  scale: [1, 0.8, 0.5, 1],
-                  opacity: [1, 1, 0, 1],
-                }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            </motion.span>
-            <motion.span
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              4
-            </motion.span>
-          </h1>
+      {/* Core content */}
+      <div className="max-w-xl w-full flex flex-col items-center relative z-20">
 
-          <h2 className="text-2xl md:text-3xl font-bold text-dark mb-4 leading-snug">
-            Lost in the Inkwell
-          </h2>
-          
-          <p className="text-foreground/80 text-base md:text-lg font-medium leading-relaxed mb-8 max-w-md">
-            This letter seems to have gone astray. It was written in invisible ink, or perhaps the message was sealed and sent to a wrong room. Let's guide you back safely.
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
-            <Magnetic strength={0.15}>
-              <motion.div
-                whileTap={{
-                  scale: 1.05,
-                  filter: "brightness(1.15) contrast(1.05)",
-                  boxShadow: "0px 8px 24px rgba(255, 139, 167, 0.45)",
-                }}
-                className="w-full sm:w-auto"
-              >
-                <Link
-                  to="/"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-dark text-white font-bold px-8 py-3.5 rounded-full hover:bg-dark/90 transition-all shadow-md hover:shadow-lg cursor-none"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Return Home</span>
-                </Link>
-              </motion.div>
-            </Magnetic>
-
-            <Magnetic strength={0.15}>
-              <motion.button
-                whileTap={{
-                  scale: 1.05,
-                  filter: "brightness(1.15) contrast(1.05)",
-                  boxShadow: "0px 8px 24px rgba(255, 139, 167, 0.45)",
-                }}
-                onClick={handleSpillInk}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-dark border border-primary/25 font-bold px-6 py-3.5 rounded-full hover:bg-primary/5 hover:border-primary transition-all shadow-sm cursor-none"
-              >
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span>Spill Ink</span>
-              </motion.button>
-            </Magnetic>
-          </div>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-black text-primary uppercase tracking-wider mb-8">
+          <Compass className="w-3.5 h-3.5" />
+          <span>Off the map</span>
         </div>
 
-        {/* Mascot & SVG Animation Column */}
-        <div className="flex items-center justify-center order-1 md:order-2">
-          <motion.div
-            className="relative w-72 h-72 md:w-85 md:h-85 flex items-center justify-center bg-white/40 backdrop-blur-md rounded-full border border-primary/10 shadow-xl shadow-primary/5"
-            onHoverStart={() => setIsHovered(true)}
-            onHoverEnd={() => setIsHovered(false)}
-            animate={{
-              y: [0, -12, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
+        {/* Big, clean 404 — no drip, just gentle floating weight */}
+        <h1 className="text-8xl md:text-9xl font-black text-dark tracking-tighter mb-5 flex items-center justify-center gap-1">
+          <motion.span
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           >
-            {/* Background Blob / Ink Pool */}
-            <motion.div
-              className="absolute w-56 h-56 rounded-full bg-secondary/30 blur-2xl z-0"
-              animate={{
-                scale: isHovered ? [1, 1.1, 1] : [1, 1.05, 1],
-                rotate: [0, 180, 360],
-              }}
-              transition={{
-                duration: 12,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-            />
+            4
+          </motion.span>
+          <motion.span
+            className="text-primary"
+            animate={{ y: [0, 10, 0], rotate: [0, 6, 0] }}
+            transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            0
+          </motion.span>
+          <motion.span
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+          >
+            4
+          </motion.span>
+        </h1>
 
-            {/* Floating Origami Paper Airplane */}
-            <motion.div
-              className="absolute z-10 w-16 h-16 pointer-events-none"
-              animate={{
-                x: [80, 100, 70, 80],
-                y: [-80, -110, -90, -80],
-                rotate: [-15, -5, -25, -15],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-accent drop-shadow-md">
-                <path
-                  d="M1.91 11.08c-.38.16-.39.69-.02.87l6.81 3.23c.31.15.68.08.92-.17l9.46-9.46c.15-.15.37.07.22.22l-9.46 9.46c-.25.25-.32.61-.17.92l3.23 6.81c.18.38.71.37.87-.02L21.72 3.1c.12-.29-.19-.6-.48-.48L1.91 11.08z"
-                  fill="currentColor"
-                />
-              </svg>
-            </motion.div>
+        <h2 className="text-2xl md:text-3xl font-bold text-dark mb-4 leading-snug">
+          This message never found its way.
+        </h2>
 
-            {/* Whimsical 404 Illustration with Custom Frame */}
+        <p className="text-foreground/70 text-base md:text-lg font-medium leading-relaxed mb-2 max-w-md">
+          Somewhere between sending and arriving, this page slipped off course.
+          Nothing was lost on our end — it just isn't here.
+        </p>
+
+        {location.pathname && location.pathname !== '/404' && (
+          <p className="text-foreground/40 text-sm font-mono mb-9 mt-1">
+            you tried: <span className="text-foreground/60">{location.pathname}</span>
+          </p>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 justify-center mb-10">
+          <Magnetic strength={0.15}>
             <motion.div
-              className="relative w-56 h-56 md:w-64 md:h-64 rounded-3xl overflow-hidden border border-primary/20 shadow-xl z-10 select-none bg-white p-2"
-              whileHover={{ scale: 1.05, rotate: 2 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              whileTap={{
+                scale: 1.05,
+                filter: "brightness(1.15) contrast(1.05)",
+                boxShadow: "0px 8px 24px rgba(255, 77, 141, 0.35)",
+              }}
+              className="w-full sm:w-auto"
             >
-              <CustomImage
-                src={ink404Illustration}
-                alt="INK whimsical 404 illustration"
-                aspectRatio="1/1"
-                className="border-none bg-transparent rounded-2xl w-full h-full select-none pointer-events-none"
-                imageClassName="rounded-2xl pointer-events-none"
-                referrerPolicy="no-referrer"
-              />
-              {/* Subtle glassmorphism overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-dark/10 to-transparent pointer-events-none rounded-2xl" />
+              <Link
+                to="/"
+                className="w-full inline-flex items-center justify-center gap-2 bg-dark text-white font-bold px-8 py-3.5 rounded-full hover:bg-dark/90 transition-all shadow-md hover:shadow-lg cursor-none"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Take me home</span>
+              </Link>
             </motion.div>
-          </motion.div>
+          </Magnetic>
+
+          <Magnetic strength={0.15}>
+            <motion.button
+              whileTap={{
+                scale: 1.05,
+                filter: "brightness(1.15) contrast(1.05)",
+                boxShadow: "0px 8px 24px rgba(168, 85, 247, 0.3)",
+              }}
+              onClick={handleSendAnother}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-dark border border-primary/25 font-bold px-6 py-3.5 rounded-full hover:bg-primary/5 hover:border-primary transition-all shadow-sm cursor-none"
+            >
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span>{sendCount > 2 ? "Still nowhere. Try home?" : "Send it off again"}</span>
+            </motion.button>
+          </Magnetic>
         </div>
 
+        {/* Better handling: quick, genuinely useful escape hatches instead of a dead end */}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link
+            to="/faq"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/70 hover:text-dark text-sm font-semibold transition-colors"
+          >
+            <MessageCircleQuestion className="w-3.5 h-3.5" />
+            Browse FAQ
+          </Link>
+          <Link
+            to="/contact"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/70 hover:text-dark text-sm font-semibold transition-colors"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            Contact support
+          </Link>
+        </div>
       </div>
     </div>
   );
